@@ -23,7 +23,9 @@
       "jars/",
       "data/",
       "!jars/**/*",
-      "!data/**/*"
+      "!data/**/*",
+      "data/.keep",
+      "jars/.keep"
     ],
     "win": {
       "target": "nsis",
