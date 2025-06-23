@@ -4,8 +4,26 @@ const os = require('os');
 const fs = require('fs');
 const { Client } = require('ssh2');
 
-const serversFile = path.join(__dirname, 'data/servers.json');
-const masterServersFile = path.join(__dirname, 'data/masterservers.json');
+const dataDir = path.join(app.getPath('userData'), 'data');
+const jarsDir = path.join(app.getPath('userData'), 'jars');
+const serversFile = path.join(dataDir, 'servers.json');
+const masterServersFile = path.join(dataDir, 'masterservers.json');
+
+if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+}
+
+if (!fs.existsSync(jarsDir)) {
+    fs.mkdirSync(jarsDir, { recursive: true });
+}
+
+if (!fs.existsSync(serversFile)) {
+    fs.writeFileSync(serversFile, '{}', 'utf8');
+}
+
+if (!fs.existsSync(masterServersFile)) {
+    fs.writeFileSync(masterServersFile, '{}', 'utf8');
+}
 
 // SSH Connect Helper (einfacher Wrapper)
 function connectSSH(config) {
@@ -76,9 +94,8 @@ function createWindow() {
 
 // Handler - Jar Files auflisten
 ipcMain.handle('listJarFiles', async () => {
-    const jarsPath = path.join(__dirname, 'jars');
     try {
-        const files = await fs.promises.readdir(jarsPath);
+        const files = await fs.promises.readdir(jarsDir);
         const jarFiles = files.filter(f => f.endsWith('.jar'));
         return { success: true, jars: jarFiles };
     } catch (err) {
@@ -584,6 +601,10 @@ ipcMain.handle('upload-files-to-server', async (event, { server, files }) => {
         console.error('Upload-Fehler:', err);
         return { success: false, message: err.message };
     }
+});
+
+app.on('will-quit', () => {
+    globalShortcut.unregisterAll();
 });
 
 app.whenReady().then(() => {
