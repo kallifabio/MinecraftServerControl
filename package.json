@@ -1,0 +1,50 @@
+{
+  "name": "minecraft-server-control",
+  "productName": "Minecraft Server Manager",
+  "author": "Coreframe Studio",
+  "description": "Minecraft Server Manager für Remote-Serververwaltung mit SSH",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "clean": "rimraf dist",
+    "build": "npm run clean && electron-builder"
+  },
+  "build": {
+    "appId": "de.coreframe.MinecraftServerManager",
+    "productName": "Minecraft Server Manager",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**",
+      "jars/",
+      "data/",
+      "!jars/**/*",
+      "!data/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "renderer/images/logo256.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Minecraft Server Manager"
+    }
+  },
+  "devDependencies": {
+    "electron": "^36.5.0",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "rimraf": "^6.0.1",
+    "ssh2": "^1.16.0"
+  }
+}
