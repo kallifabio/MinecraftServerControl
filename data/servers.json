@@ -1,0 +1,60 @@
+[
+  {
+    "name": "Test-1",
+    "ip": "45.82.120.38",
+    "sshPort": 22,
+    "serverPort": 25565,
+    "ram": 2048,
+    "software": "paper.jar"
+  },
+  {
+    "name": "Test-2",
+    "ip": "45.82.120.38",
+    "sshPort": 22,
+    "serverPort": 25566,
+    "ram": 2048,
+    "software": "paper.jar"
+  },
+  {
+    "name": "Test-3",
+    "ip": "45.82.120.38",
+    "sshPort": 22,
+    "serverPort": 25701,
+    "ram": 2048,
+    "software": "paper.jar"
+  },
+  {
+    "name": "Test-4",
+    "ip": "45.82.120.38",
+    "sshPort": 22,
+    "serverPort": 25702,
+    "ram": 2048,
+    "software": "paper.jar"
+  },
+  {
+    "name": "Test-5",
+    "ip": "45.82.120.38",
+    "sshPort": 22,
+    "serverPort": 25703,
+    "ram": 2048,
+    "software": "paper.jar"
+  },
+  {
+    "name": "Test-6",
+    "ip": "45.82.120.38",
+    "sshPort": 22,
+    "serverPort": 25704,
+    "ramMb": 2048,
+    "software": "paper.jar"
+  },
+  {
+    "name": "Test-7",
+    "ip": "45.82.120.38",
+    "sshPort": 22,
+    "username": "root",
+    "password": "mausmann1",
+    "serverPort": 25705,
+    "ramMb": 2048,
+    "software": "paper.jar"
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "name": "vServer-1",
+    "ip": "45.82.120.38",
+    "sshPort": 22,
+    "username": "root",
+    "password": "mausmann1"
+  }
+]
