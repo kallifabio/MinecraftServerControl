@@ -157,40 +157,40 @@ async function loadFiles(path = null) {
 
 async function handleFiles(files) {
     if (!selectedServer) {
-      alert('Bitte wähle zuerst einen Server aus.');
-      return;
+        alert('Bitte wähle zuerst einen Server aus.');
+        return;
     }
 
     const uploads = [];
 
     for (const file of files) {
-      if (!addedFiles.has(file.name)) {
-        addedFiles.add(file.name);
+        if (!addedFiles.has(file.name)) {
+            addedFiles.add(file.name);
 
-        const arrayBuffer = await file.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
+            const arrayBuffer = await file.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
 
-        uploads.push({
-          name: file.name,
-          buffer: uint8Array,
-        });
+            uploads.push({
+                name: file.name,
+                buffer: uint8Array,
+            });
 
-        const li = document.createElement('li');
-        li.textContent = file.name;
-        fileList.appendChild(li);
-      }
+            const li = document.createElement('li');
+            li.textContent = file.name;
+            fileList.appendChild(li);
+        }
     }
 
     const result = await window.electronAPI.uploadFilesToServer({
-      server: selectedServer,
-      files: uploads
+        server: selectedServer,
+        files: uploads
     });
 
     if (!result.success) {
-      alert(`❌ Upload fehlgeschlagen: ${result.message}`);
+        alert(`❌ Upload fehlgeschlagen: ${result.message}`);
     } else {
-      alert(`✅ ${result.uploaded} Datei(en) erfolgreich hochgeladen.`);
-      loadFiles();
+        alert(`✅ ${result.uploaded} Datei(en) erfolgreich hochgeladen.`);
+        loadFiles();
     }
 }
 
@@ -211,6 +211,38 @@ async function loadJarOptions() {
         option.textContent = 'Fehler beim Laden der Software';
         select.appendChild(option);
     }
+}
+
+function submitServerSoftware() {
+    const input = document.getElementById('serverFile');
+    const file = input.files[0];
+
+    if (!file) {
+        alert("Bitte wählen Sie eine Datei aus.");
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = async function () {
+        const arrayBuffer = reader.result;
+        const uint8Array = new Uint8Array(arrayBuffer);
+
+        try {
+            const result = await window.electronAPI.uploadServerSoftware(file.name, uint8Array);
+            if (result.success) {
+                alert("Datei erfolgreich hochgeladen.");
+            } else {
+                alert("Fehler beim Hochladen: " + result.error);
+            }
+        } catch (err) {
+            alert("Kommunikationsfehler: " + err.message);
+        } finally {
+            closeSoftwareModal(); // Modal schließen
+        }
+    };
+
+    reader.readAsArrayBuffer(file);
 }
 
 function closeServerDetail() {
@@ -246,6 +278,15 @@ document.getElementById('commandInput').addEventListener('keydown', async (event
         // Input leeren
         event.target.value = '';
     }
+});
+
+function reloadFrontend() {
+  window.electronAPI.reloadWindow();
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+    const version = await window.electronAPI.getVersion();
+    document.title = `Minecraft Server Manager - v${version} by Coreframe Studio`;
 });
 
 // Setup beim Laden

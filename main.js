@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, Menu, globalShortcut } = require('electron'
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
+const fsp = require('fs').promises;
 const { Client } = require('ssh2');
 
 const dataDir = path.join(app.getPath('userData'), 'data');
@@ -99,6 +100,20 @@ ipcMain.handle('listJarFiles', async () => {
         const jarFiles = files.filter(f => f.endsWith('.jar'));
         return { success: true, jars: jarFiles };
     } catch (err) {
+        return { success: false, error: err.message };
+    }
+});
+
+// Handler - Server Software hochladen
+ipcMain.handle('upload-server-software', async (event, name, data) => {
+    const targetPath = path.join(jarsDir, name);
+
+    try {
+        await fsp.writeFile(targetPath, data);
+        console.log(`Server-Software gespeichert unter: ${targetPath}`);
+        return { success: true };
+    } catch (err) {
+        console.error("Fehler beim Speichern der Server-Datei:", err);
         return { success: false, error: err.message };
     }
 });
@@ -601,6 +616,17 @@ ipcMain.handle('upload-files-to-server', async (event, { server, files }) => {
         console.error('Upload-Fehler:', err);
         return { success: false, message: err.message };
     }
+});
+
+// Handler - Frontend neuladen
+ipcMain.handle('reload-window', async (event) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (win) win.reload();
+});
+
+// Handler - Version Nummer
+ipcMain.handle('app-version', () => {
+    return app.getVersion();
 });
 
 app.on('will-quit', () => {
