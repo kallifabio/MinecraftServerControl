@@ -3,12 +3,45 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Minecraft Server Manager - v1.0.0 by Coreframe Studio</title>
+    <title>Titel wird geladen...</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100 text-gray-800 font-sans p-6">
     <h1 class="text-3xl font-bold mb-6 text-center">🎮 Minecraft Server Manager</h1>
+    <div class="max-w-2xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 px-4">
+            <div class="bg-white shadow-md rounded-lg p-6 flex items-center justify-center">
+                <button onclick="openSoftwareModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
+                    Server Software hinzufügen
+                </button>
+            </div>
+
+            <div class="bg-white shadow-md rounded-lg p-6 flex items-center justify-center">
+                <button onclick="reloadFrontend()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
+                    Seite/Frontend neuladen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div id="softwareModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-lg relative">
+            <h2 class="text-xl font-semibold mb-4">Server Software hochladen</h2>
+
+            <input type="file" id="serverFile" class="mb-4 w-full" />
+
+            <div class="flex justify-end gap-2">
+                <button onclick="closeSoftwareModal()" class="bg-gray-300 hover:bg-gray-400 text-black font-semibold px-4 py-2 rounded">
+                    Abbrechen
+                </button>
+                <button onclick="submitServerSoftware()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
+                    Hochladen
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Obere Bereiche: Masterserver erstellen + Minecraft Server erstellen -->
     <div class="flex gap-6 mb-8">
@@ -18,33 +51,27 @@
             <form onsubmit="createMasterServer(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block font-medium mb-1">Server Name</label>
-                    <input type="text" id="masterServerName" required
-                        class="w-full border border-gray-300 rounded px-3 py-2" />
+                    <input type="text" id="masterServerName" required class="w-full border border-gray-300 rounded px-3 py-2" />
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Server IP</label>
-                    <input type="text" id="masterServerIP" required
-                        class="w-full border border-gray-300 rounded px-3 py-2" />
+                    <input type="text" id="masterServerIP" required class="w-full border border-gray-300 rounded px-3 py-2" />
                 </div>
                 <div>
                     <label class="block font-medium mb-1">SSH Port</label>
-                    <input type="number" id="masterServerSSHPort" required
-                        class="w-full border border-gray-300 rounded px-3 py-2" />
+                    <input type="number" id="masterServerSSHPort" required class="w-full border border-gray-300 rounded px-3 py-2" />
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Username</label>
-                    <input type="text" id="masterServerUsername" required
-                        class="w-full border border-gray-300 rounded px-3 py-2" />
+                    <input type="text" id="masterServerUsername" required class="w-full border border-gray-300 rounded px-3 py-2" />
                 </div>
                 <div>
                     <label class="block font-medium mb-1">Passwort</label>
-                    <input type="password" id="masterServerPassword" required
-                        class="w-full border border-gray-300 rounded px-3 py-2" />
+                    <input type="password" id="masterServerPassword" required class="w-full border border-gray-300 rounded px-3 py-2" />
                 </div>
 
                 <div class="col-span-full mt-4">
-                    <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
                         Masterserver erstellen
                     </button>
                     <div id="masterCreateOutput" class="mt-2 text-green-600 font-medium"></div>
@@ -55,24 +82,20 @@
         <!-- Minecraft Server erstellen -->
         <div class="bg-white shadow-md rounded-lg p-6 flex-1">
             <h2 class="text-xl font-semibold mb-4">🛠️ Minecraft Server erstellen</h2>
-            <form id="createMinecraftServerForm" onsubmit="createServer(event)"
-                class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form id="createMinecraftServerForm" onsubmit="createServer(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block font-medium mb-1">Server Name</label>
-                    <input type="text" id="serverName" required
-                        class="w-full border border-gray-300 rounded px-3 py-2" />
+                    <input type="text" id="serverName" required class="w-full border border-gray-300 rounded px-3 py-2" />
                 </div>
 
                 <div>
                     <label class="block font-medium mb-1">Server Port</label>
-                    <input type="number" id="serverPort" required
-                        class="w-full border border-gray-300 rounded px-3 py-2" />
+                    <input type="number" id="serverPort" required class="w-full border border-gray-300 rounded px-3 py-2" />
                 </div>
 
                 <div>
                     <label class="block font-medium mb-1">RAM (in MB)</label>
-                    <input type="number" id="serverRAM" min="512" step="256" required
-                        class="w-full border border-gray-300 rounded px-3 py-2" placeholder="z.B. 2048" />
+                    <input type="number" id="serverRAM" min="512" step="256" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="z.B. 2048" />
                 </div>
 
                 <div>
@@ -90,8 +113,7 @@
                 </div>
 
                 <div class="col-span-full mt-4">
-                    <button type="submit"
-                        class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded">
                         Server erstellen
                     </button>
                     <div id="createOutput" class="mt-2 text-green-600 font-medium"></div>
@@ -106,8 +128,7 @@
         <div class="bg-white shadow-md rounded-lg p-6 flex-1">
             <h2 class="text-xl font-semibold mb-4">🗂️ Liste Masterserver</h2>
             <ul id="masterServerList" class="space-y-2 max-h-64 overflow-y-auto"></ul>
-            <button onclick="loadMasterServers()"
-                class="mt-4 bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded">
+            <button onclick="loadMasterServers()" class="mt-4 bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded">
                 Masterserver laden
             </button>
         </div>
@@ -116,8 +137,7 @@
         <div class="bg-white shadow-md rounded-lg p-6 flex-1">
             <h2 class="text-xl font-semibold mb-4">🗂️ Liste Minecraft Server</h2>
             <ul id="serverList" class="space-y-2 max-h-64 overflow-y-auto"></ul>
-            <button onclick="loadServers()"
-                class="mt-4 bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded">
+            <button onclick="loadServers()" class="mt-4 bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded">
                 Server laden
             </button>
         </div>
@@ -143,26 +163,24 @@
 
         <div class="mb-6">
             <h3 class="font-semibold mb-2">Konsole</h3>
-            <pre id="consoleOutput"
-                class="bg-black text-green-500 p-4 rounded h-96 overflow-y-auto text-sm whitespace-pre-wrap"></pre>
+            <pre id="consoleOutput" class="bg-black text-green-500 p-4 rounded h-96 overflow-y-auto text-sm whitespace-pre-wrap"></pre>
             <div class="mt-4">
-                <input type="text" id="commandInput" placeholder="Befehl eingeben und Enter drücken..."
-                    class="w-full border border-gray-300 rounded px-3 py-2" />
+                <input type="text" id="commandInput" placeholder="Befehl eingeben und Enter drücken..." class="w-full border border-gray-300 rounded px-3 py-2" />
             </div>
         </div>
 
         <div>
             <h3 class="font-semibold mb-2">Dateien</h3>
-          
+
             <!-- Drag-and-Drop-Bereich -->
             <div id="dropZone" class="border-2 border-dashed border-gray-400 p-6 rounded-lg text-center text-gray-600 hover:bg-gray-100 transition-colors duration-200">
-              Dateien hierher ziehen oder klicken
-              <input type="file" id="fileInput" multiple class="hidden" />
+                Dateien hierher ziehen oder klicken
+                <input type="file" id="fileInput" multiple class="hidden" />
             </div>
-          
+
             <!-- Dateiliste -->
             <ul id="fileList" class="text-lg list-disc pl-5 mt-4"></ul>
-          </div>          
+        </div>
     </div>
 
     <script>
@@ -215,22 +233,22 @@
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
         const fileList = document.getElementById('fileList');
-      
+
         const addedFiles = new Set();
-      
+
         dropZone.addEventListener('click', () => fileInput.click());
-      
+
         fileInput.addEventListener('change', e => handleFiles(e.target.files));
-      
+
         dropZone.addEventListener('dragover', e => {
-          e.preventDefault();
-          dropZone.classList.add('bg-gray-200');
+            e.preventDefault();
+            dropZone.classList.add('bg-gray-200');
         });
-      
+
         dropZone.addEventListener('dragleave', () => {
-          dropZone.classList.remove('bg-gray-200');
+            dropZone.classList.remove('bg-gray-200');
         });
-      
+
         dropZone.addEventListener('drop', e => {
             e.preventDefault();
             dropZone.classList.remove('bg-gray-200');
@@ -238,6 +256,17 @@
                 handleFiles(e.dataTransfer.files);
             }
         });
+    </script>
+    <script>
+        function openSoftwareModal() {
+            document.getElementById("softwareModal").classList.remove("hidden");
+            document.getElementById("softwareModal").classList.add("flex");
+        }
+
+        function closeSoftwareModal() {
+            document.getElementById("softwareModal").classList.add("hidden");
+            document.getElementById("softwareModal").classList.remove("flex");
+        }
     </script>
     <script src="renderer.js"></script>
 </body>
