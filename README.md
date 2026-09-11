@@ -10,6 +10,7 @@
 ![Platform](https://img.shields.io/badge/platform-Windows-4fa39a)
 ![Electron](https://img.shields.io/badge/Electron-36-4fa39a?logo=electron&logoColor=white)
 ![Node](https://img.shields.io/badge/Node-%3E%3D18-4fa39a?logo=node.js&logoColor=white)
+![License](https://img.shields.io/badge/license-All%20Rights%20Reserved-4fa39a)
 
 </div>
 
@@ -28,18 +29,21 @@
 - [SSH-Host-Key-Pinning](#-ssh-host-key-pinning)
 - [Architektur](#️-architektur)
 - [Auto-Update](#-auto-update)
+- [Code-Signing](#️-code-signing-für-releases)
 - [Bekannte Einschränkungen](#️-bekannte-einschränkungen)
+- [Lizenz](#-lizenz)
 
 ## ✨ Funktionen
 
 | Bereich | Was es tut |
 |---|---|
 | 🔧 **Masterserver** | Mehrere Remote-Hosts (per SSH) anlegen, bearbeiten, löschen |
-| 🚀 **Minecraft-Server** | Erstellen, starten, stoppen, löschen – mit Online/Offline-Status in der Liste |
-| 📂 **Dateibrowser** | Ordner-Navigation mit Breadcrumbs, Upload per Drag & Drop, Download/Umbenennen/Löschen einzelner Dateien |
-| 💾 **Backups** | `.tar.gz` des Serververzeichnisses erstellen, auflisten, herunterladen, löschen |
+| 🚀 **Minecraft-Server** | Erstellen, RAM/Port nachträglich anpassen, starten, stoppen, löschen – mit Online/Offline-Status in der Liste |
+| 📂 **Dateibrowser** | Ordner-Navigation mit Breadcrumbs, Upload per Drag & Drop (mit Fortschrittsanzeige), Download/Umbenennen/Löschen einzelner Dateien |
+| 💾 **Backups** | `.tar.gz` des Serververzeichnisses erstellen, auflisten, herunterladen, löschen – älteste Backups werden automatisch rotiert (Limit konfigurierbar in `lib/ipc-handlers.js`) |
 | 🖥️ **Live-Konsole** | Log-Streaming per `tail -f` über SSH, Befehle direkt an den laufenden Server senden |
 | 🔑 **Sicherheit** | Verschlüsselte Zugangsdaten, SSH-Host-Key-Pinning, validierte/escapte Shell-Kommandos |
+| ⚡ **Performance** | SSH-Verbindungs-Pooling (wiederverwendet warme Verbindungen statt bei jeder Aktion neu zu handshaken) |
 
 **Für wen:** Server-Admins mit mehreren Minecraft-Instanzen, Community-Leiter mit eigener Infrastruktur, Entwickler, die Server schnell aufsetzen wollen.
 
@@ -120,12 +124,14 @@ flowchart LR
         Validate[lib/validate.js<br/>Escaping/Validierung]
         StoreFactory[lib/store-factory.js<br/>reine Persistenzlogik]
         Store[lib/store.js<br/>Electron-Wrapper]
+        SshFactory[lib/ssh-service-factory.js<br/>reine SSH-Logik + Pool]
     end
 
     Remote[(Remote-Server<br/>per SSH/SFTP)]
 
     UI <-->|IPC| Preload <--> IPC
     IPC --> SSH --> Known
+    SSH --> SshFactory
     IPC --> Validate
     IPC --> Store --> StoreFactory
     SSH <-->|SSH/SFTP| Remote
@@ -133,16 +139,17 @@ flowchart LR
 
 | Datei | Zweck |
 |---|---|
-| `main.js` | App-Bootstrap (Fenster, globale Shortcuts, Auto-Update-Check) |
+| `main.js` | App-Bootstrap (Fenster, globale Shortcuts, Auto-Update-Check, Pool-Cleanup) |
 | `preload.js` | Context-Bridge-API für den Renderer |
 | `lib/store-factory.js` | reine Persistenzlogik (ohne Electron-Abhängigkeit, unit-testbar) |
 | `lib/store.js` | verdrahtet die Factory mit echten Electron-Pfaden/`safeStorage` |
-| `lib/ssh-service.js` | SSH/SFTP-Hilfsfunktionen inkl. Host-Key-Prüfung |
+| `lib/ssh-service-factory.js` | reine SSH/SFTP-Logik inkl. Verbindungs-Pool (parametrisiert über eine injizierbare `Client`-Klasse, unit-testbar mit Fake-Client) |
+| `lib/ssh-service.js` | verdrahtet die Factory mit dem echten `ssh2`-Modul |
 | `lib/known-hosts.js` | Trust-on-first-use-Host-Key-Speicher |
 | `lib/validate.js` | Eingabevalidierung & sicheres Shell-Quoting |
 | `lib/ipc-handlers.js` | IPC-Handler, die Renderer-Aktionen auf obige Module abbilden |
 | `renderer/` | UI (HTML/JS, Tailwind via CDN, strikte CSP) |
-| `test/` | `node:test`-Unit-Tests für Validierung, Persistenz, Host-Key-Pinning |
+| `test/` | `node:test`-Suite: Validierung, Persistenz, Host-Key-Pinning, SSH-Logik (Fake-Client) und IPC-Handler (End-to-End mit gefaktem `electron`+`ssh2`) |
 | `.github/workflows/ci.yml` | GitHub Actions: Lint + Tests bei jedem Push/PR |
 
 ## 🔄 Auto-Update
@@ -154,14 +161,38 @@ muss zusätzlich ein signiertes Release dort veröffentlicht werden
 (`electron-builder --publish always` mit gültigem `GH_TOKEN`) – das ist
 bewusst nicht Teil dieses Commits.
 
+## 🖋️ Code-Signing (für Releases)
+
+Der NSIS-Installer ist aktuell **unsigniert** – Windows SmartScreen zeigt
+bei der Installation eine Warnung. electron-builder signiert automatisch,
+sobald die folgenden Umgebungsvariablen beim Build gesetzt sind (kein
+zusätzlicher Konfigurationsaufwand nötig):
+
+```bash
+CSC_LINK=<Pfad oder URL zur .pfx-Zertifikatsdatei>
+CSC_KEY_PASSWORD=<Passwort des Zertifikats>
+npm run build
+```
+
+Ein Code-Signing-Zertifikat muss bei einer Zertifizierungsstelle (z.B.
+DigiCert, Sectigo) erworben werden – das ist ein externer,
+kostenpflichtiger Schritt mit Geschäfts-/Identitätsprüfung und daher nicht
+Teil dieses Repositories.
+
 ## ⚠️ Bekannte Einschränkungen
 
 - Remote-Server werden aktuell als `root` unter `/root/<servername>`
   betrieben. Für produktive Umgebungen wird empfohlen, stattdessen einen
   dedizierten, unprivilegierten Systembenutzer zu verwenden.
-- Es findet aktuell kein SSH-Verbindungs-Pooling statt – jede Aktion baut
-  eine neue Verbindung auf.
 - Der Online/Offline-Status in der Serverliste wird beim Laden einmalig
   geprüft, nicht laufend aktualisiert (kein automatisches Polling, um nicht
   unnötig viele SSH-Verbindungen zu allen Hosts offen zu halten).
-- Es ist noch keine `LICENSE`-Datei hinterlegt.
+- Der Windows-Installer ist unsigniert (siehe Abschnitt Code-Signing oben).
+- Kein tatsächlich veröffentlichtes GitHub Release, daher greift
+  Auto-Update aktuell noch nicht (siehe Abschnitt Auto-Update oben).
+
+## 📄 Lizenz
+
+Alle Rechte vorbehalten, siehe [LICENSE](LICENSE). Dieses Repository ist
+zwar öffentlich einsehbar, das bedeutet aber **keine** Erlaubnis zur
+Nutzung, Kopie oder Weiterverbreitung des Codes.

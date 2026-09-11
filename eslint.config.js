@@ -12,7 +12,8 @@ const nodeGlobals = {
     setTimeout: 'readonly',
     clearTimeout: 'readonly',
     setInterval: 'readonly',
-    clearInterval: 'readonly'
+    clearInterval: 'readonly',
+    queueMicrotask: 'readonly'
 };
 
 const browserGlobals = {

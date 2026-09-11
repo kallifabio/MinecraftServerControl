@@ -79,6 +79,16 @@
 
     <div id="toastContainer" class="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 w-80"></div>
 
+    <div id="transferProgress" class="fixed bottom-4 left-4 z-[100] w-72 bg-panel2 border border-edge rounded-md px-3 py-2.5 shadow-lg" hidden>
+        <div class="flex items-center justify-between text-[11px] mb-1.5">
+            <span id="transferProgressLabel" class="text-dim truncate"></span>
+            <span id="transferProgressPercent" class="text-ink font-mono shrink-0 ml-2"></span>
+        </div>
+        <div class="h-1.5 rounded-full bg-edge overflow-hidden">
+            <div id="transferProgressBar" class="h-full bg-accent rounded-full" style="width:0%"></div>
+        </div>
+    </div>
+
     <div class="h-screen flex flex-col">
         <!-- Header -->
         <header class="flex items-center justify-between px-4 py-2.5 border-b border-edge bg-panel shrink-0">
@@ -87,8 +97,8 @@
                 <span id="appVersion" class="text-dim font-mono text-[11px]"></span>
             </div>
             <div class="flex items-center gap-1.5">
-                <button id="btnUploadSoftware" class="icon-btn p-2" title="Server-Software hochladen"></button>
-                <button id="btnReload" class="icon-btn p-2" title="Frontend neu laden"></button>
+                <button id="btnUploadSoftware" class="icon-btn p-2" title="Server-Software hochladen" aria-label="Server-Software hochladen"></button>
+                <button id="btnReload" class="icon-btn p-2" title="Frontend neu laden" aria-label="Frontend neu laden"></button>
             </div>
         </header>
 
@@ -98,7 +108,7 @@
                 <div class="flex flex-col min-h-0 border-b border-edge">
                     <div class="flex items-center justify-between px-3 py-2">
                         <h2 class="text-[11px] font-semibold uppercase tracking-wider text-dim">Masterserver</h2>
-                        <button id="btnNewMasterServer" class="icon-btn p-1" title="Masterserver hinzufügen"></button>
+                        <button id="btnNewMasterServer" class="icon-btn p-1" title="Masterserver hinzufügen" aria-label="Masterserver hinzufügen"></button>
                     </div>
                     <ul id="masterServerList" class="overflow-y-auto max-h-48"></ul>
                     <p id="masterServerEmpty" class="px-3 pb-3 text-dim text-[12px]">Noch keine Masterserver angelegt.</p>
@@ -107,7 +117,7 @@
                 <div class="flex flex-col min-h-0 flex-1">
                     <div class="flex items-center justify-between px-3 py-2">
                         <h2 class="text-[11px] font-semibold uppercase tracking-wider text-dim">Minecraft-Server</h2>
-                        <button id="btnNewServer" class="icon-btn p-1" title="Server erstellen"></button>
+                        <button id="btnNewServer" class="icon-btn p-1" title="Server erstellen" aria-label="Server erstellen"></button>
                     </div>
                     <ul id="serverList" class="overflow-y-auto flex-1"></ul>
                     <p id="serverEmpty" class="px-3 pb-3 text-dim text-[12px]">Noch keine Server erstellt.</p>
@@ -133,7 +143,8 @@
                         <div class="flex items-center gap-1.5 shrink-0">
                             <button id="btnStartServer" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-online/15 text-online hover:bg-online/25 text-[12px] font-medium"></button>
                             <button id="btnStopServer" class="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-danger/15 text-danger hover:bg-danger/25 text-[12px] font-medium"></button>
-                            <button id="btnDeleteServer" class="icon-btn danger p-2" title="Server löschen"></button>
+                            <button id="btnEditServer" class="icon-btn p-2" title="RAM/Port bearbeiten" aria-label="RAM/Port bearbeiten"></button>
+                            <button id="btnDeleteServer" class="icon-btn danger p-2" title="Server löschen" aria-label="Server löschen"></button>
                         </div>
                     </div>
 
@@ -177,7 +188,7 @@
         <div class="bg-panel border border-edge rounded-lg p-5 w-full max-w-md">
             <div class="flex items-center justify-between mb-4">
                 <h2 id="masterServerModalTitle" class="text-[14px] font-semibold">Masterserver erstellen</h2>
-                <button class="icon-btn p-1.5" data-close-modal="masterServerModal" id="masterServerModalClose"></button>
+                <button class="icon-btn p-1.5" data-close-modal="masterServerModal" id="masterServerModalClose" aria-label="Schließen"></button>
             </div>
             <form id="masterServerForm" class="grid grid-cols-2 gap-3">
                 <input type="hidden" id="masterServerId" />
@@ -209,8 +220,8 @@
     <div id="serverModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
         <div class="bg-panel border border-edge rounded-lg p-5 w-full max-w-md">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-[14px] font-semibold">Minecraft-Server erstellen</h2>
-                <button class="icon-btn p-1.5" data-close-modal="serverModal" id="serverModalClose"></button>
+                <h2 id="serverModalTitle" class="text-[14px] font-semibold">Minecraft-Server erstellen</h2>
+                <button class="icon-btn p-1.5" data-close-modal="serverModal" id="serverModalClose" aria-label="Schließen"></button>
             </div>
             <form id="serverForm" class="grid grid-cols-2 gap-3">
                 <label class="col-span-2 text-[12px] text-dim">Masterserver
@@ -241,12 +252,35 @@
         </div>
     </div>
 
+    <!-- Minecraft-Server Modal (RAM/Port bearbeiten) -->
+    <div id="serverEditModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
+        <div class="bg-panel border border-edge rounded-lg p-5 w-full max-w-sm">
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="serverEditModalTitle" class="text-[14px] font-semibold">Server bearbeiten</h2>
+                <button class="icon-btn p-1.5" data-close-modal="serverEditModal" id="serverEditModalClose" aria-label="Schließen"></button>
+            </div>
+            <p class="text-dim text-[11px] mb-3">Name, Masterserver und Software eines Servers lassen sich nach dem Erstellen nicht ändern - nur Port und RAM.</p>
+            <form id="serverEditForm" class="grid grid-cols-2 gap-3">
+                <label class="text-[12px] text-dim">Server-Port
+                    <input type="number" id="serverEditPort" required min="1" max="65535" class="mt-1 w-full bg-panel2 border border-edge rounded-md px-3 py-2 text-ink font-mono focus:outline-none focus:border-accent" />
+                </label>
+                <label class="text-[12px] text-dim">RAM (MB)
+                    <input type="number" id="serverEditRAM" min="256" max="131072" step="256" required class="mt-1 w-full bg-panel2 border border-edge rounded-md px-3 py-2 text-ink font-mono focus:outline-none focus:border-accent" />
+                </label>
+                <div class="col-span-2 flex justify-end gap-2 mt-2">
+                    <button type="button" data-close-modal="serverEditModal" class="px-3 py-2 rounded-md text-[12px] text-dim hover:text-ink">Abbrechen</button>
+                    <button type="submit" id="serverEditFormSubmit" class="px-3 py-2 rounded-md bg-accent/15 text-accenthi hover:bg-accent/25 text-[12px] font-medium">Speichern</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Server-Software Modal -->
     <div id="softwareModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50 p-4">
         <div class="bg-panel border border-edge rounded-lg p-5 w-full max-w-md">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-[14px] font-semibold">Server-Software hochladen</h2>
-                <button class="icon-btn p-1.5" data-close-modal="softwareModal" id="softwareModalClose"></button>
+                <button class="icon-btn p-1.5" data-close-modal="softwareModal" id="softwareModalClose" aria-label="Schließen"></button>
             </div>
             <input type="file" id="serverFile" accept=".jar" class="mb-4 w-full text-[12px] text-dim" />
             <div class="flex justify-end gap-2">

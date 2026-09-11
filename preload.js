@@ -12,9 +12,14 @@ ipcRenderer.on('log-stream-end', () => {
   window.dispatchEvent(new CustomEvent('logStreamEnd'));
 });
 
+ipcRenderer.on('file-transfer-progress', (_, data) => {
+  window.dispatchEvent(new CustomEvent('fileTransferProgress', { detail: data }));
+});
+
 contextBridge.exposeInMainWorld('electronAPI', {
   listJarFiles: () => ipcRenderer.invoke('listJarFiles'),
   createServer: (data) => ipcRenderer.invoke('create-server', data),
+  updateServer: (serverData, changes) => ipcRenderer.invoke('update-server', serverData, changes),
   deleteServer: (serverData, options) => ipcRenderer.invoke('delete-server', serverData, options),
   createMasterServer: (masterServerData) => ipcRenderer.invoke('createMasterServer', masterServerData),
   updateMasterServer: (id, data) => ipcRenderer.invoke('update-master-server', id, data),

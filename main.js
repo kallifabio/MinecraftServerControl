@@ -3,6 +3,7 @@ const path = require('path');
 const { autoUpdater } = require('electron-updater');
 
 const store = require('./lib/store');
+const ssh = require('./lib/ssh-service');
 const { registerIpcHandlers } = require('./lib/ipc-handlers');
 
 // Auto-Update: prüft beim Start still auf eine neuere, signierte Version und
@@ -42,6 +43,7 @@ function createWindow() {
 
 app.on('will-quit', () => {
     globalShortcut.unregisterAll();
+    ssh.closeAllPooledConnections();
 });
 
 app.whenReady().then(() => {

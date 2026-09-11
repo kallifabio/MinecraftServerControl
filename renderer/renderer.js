@@ -23,6 +23,14 @@ function iconSvg(name, cls = 'w-4 h-4') {
     return `<svg class="${cls}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${ICONS[name] || ''}</svg>`;
 }
 
+// Setzt title UND aria-label gleichzeitig - title allein reicht für
+// Screenreader bei reinen Icon-Buttons nicht zuverlässig aus.
+function labelButton(btn, label) {
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+    return btn;
+}
+
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
@@ -105,6 +113,38 @@ function confirmDialog({ title, message, checkboxLabel }) {
 }
 
 // ---------------------------------------------------------------------------
+// Transfer-Fortschritt (Datei-/Backup-Up-/Downloads)
+// ---------------------------------------------------------------------------
+function showTransferProgress(label) {
+    document.getElementById('transferProgressLabel').textContent = label;
+    document.getElementById('transferProgressPercent').textContent = '0%';
+    document.getElementById('transferProgressBar').style.width = '0%';
+    document.getElementById('transferProgress').hidden = false;
+}
+
+function updateTransferProgress({ fileName, transferred, total }) {
+    const el = document.getElementById('transferProgress');
+    if (el.hidden) return;
+    const pct = total > 0 ? Math.min(100, Math.round((transferred / total) * 100)) : 0;
+    document.getElementById('transferProgressLabel').textContent = fileName || '';
+    document.getElementById('transferProgressPercent').textContent = `${pct}%`;
+    document.getElementById('transferProgressBar').style.width = `${pct}%`;
+}
+
+function hideTransferProgress() {
+    document.getElementById('transferProgress').hidden = true;
+}
+
+async function withTransferProgress(label, fn) {
+    showTransferProgress(label);
+    try {
+        return await fn();
+    } finally {
+        hideTransferProgress();
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Busy-State-Helfer für Buttons bei langlaufenden IPC-Aktionen
 // ---------------------------------------------------------------------------
 function withBusy(button, busyLabel, fn) {
@@ -177,19 +217,19 @@ async function loadMasterServers() {
 
         const editBtn = document.createElement('button');
         editBtn.className = 'icon-btn p-1.5';
-        editBtn.title = 'Bearbeiten';
+        labelButton(editBtn, `"${ms.name}" bearbeiten`);
         editBtn.innerHTML = iconSvg('pencil');
         editBtn.addEventListener('click', () => openMasterServerModal(ms));
 
         const keyBtn = document.createElement('button');
         keyBtn.className = 'icon-btn p-1.5';
-        keyBtn.title = 'Host-Key zurücksetzen (nach legitimer Neuinstallation des Servers)';
+        labelButton(keyBtn, `Host-Key für "${ms.name}" zurücksetzen (nach legitimer Neuinstallation des Servers)`);
         keyBtn.innerHTML = iconSvg('key');
         keyBtn.addEventListener('click', () => forgetHostKey(ms));
 
         const delBtn = document.createElement('button');
         delBtn.className = 'icon-btn danger p-1.5';
-        delBtn.title = 'Löschen';
+        labelButton(delBtn, `"${ms.name}" löschen`);
         delBtn.innerHTML = iconSvg('trash');
         delBtn.addEventListener('click', () => deleteMasterServer(ms));
 
@@ -425,6 +465,37 @@ function closeServerDetail() {
 document.getElementById('btnDeleteServer').innerHTML = iconSvg('trash');
 document.getElementById('btnDeleteServer').addEventListener('click', deleteSelectedServer);
 
+document.getElementById('btnEditServer').innerHTML = iconSvg('pencil');
+document.getElementById('btnEditServer').addEventListener('click', () => {
+    if (!selectedServer) return;
+    document.getElementById('serverEditModalTitle').textContent = `"${selectedServer.name}" bearbeiten`;
+    document.getElementById('serverEditPort').value = selectedServer.serverPort;
+    document.getElementById('serverEditRAM').value = selectedServer.ramMb;
+    openModal('serverEditModal');
+});
+document.getElementById('serverEditModalClose').innerHTML = iconSvg('x');
+
+document.getElementById('serverEditForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!selectedServer) return;
+    const submitBtn = document.getElementById('serverEditFormSubmit');
+    await withBusy(submitBtn, 'Speichert…', async () => {
+        const changes = {
+            serverPort: parseInt(document.getElementById('serverEditPort').value, 10),
+            ramMb: parseInt(document.getElementById('serverEditRAM').value, 10)
+        };
+        const result = await window.electronAPI.updateServer(selectedServer, changes);
+        showToast(result.message, result.success ? 'success' : 'error');
+        if (result.success) {
+            closeModal('serverEditModal');
+            selectedServer = { ...selectedServer, ...changes };
+            document.getElementById('detailServerMeta').textContent =
+                `${masterServerLabel(selectedServer.masterServerId)?.ip}:${selectedServer.serverPort} · ${selectedServer.software}`;
+            await loadServers();
+        }
+    })();
+});
+
 document.getElementById('btnStartServer').innerHTML = iconSvg('play') + '<span>Starten</span>';
 document.getElementById('btnStopServer').innerHTML = iconSvg('stop') + '<span>Stoppen</span>';
 
@@ -475,6 +546,7 @@ function setupLiveLogStream() {
         appendConsole('Log-Stream wurde beendet.');
         logStreamActive = false;
     });
+    window.addEventListener('fileTransferProgress', (e) => updateTransferProgress(e.detail));
 }
 
 document.getElementById('commandInput').addEventListener('keydown', async (event) => {
@@ -564,7 +636,7 @@ async function loadFiles(path) {
         if (file.type === 'file') {
             const dlBtn = document.createElement('button');
             dlBtn.className = 'icon-btn p-1.5';
-            dlBtn.title = 'Herunterladen';
+            labelButton(dlBtn, `"${file.name}" herunterladen`);
             dlBtn.innerHTML = iconSvg('download');
             dlBtn.addEventListener('click', () => downloadServerFile(file));
             actions.appendChild(dlBtn);
@@ -572,13 +644,13 @@ async function loadFiles(path) {
 
         const renameBtn = document.createElement('button');
         renameBtn.className = 'icon-btn p-1.5';
-        renameBtn.title = 'Umbenennen';
+        labelButton(renameBtn, `"${file.name}" umbenennen`);
         renameBtn.innerHTML = iconSvg('pencil');
         renameBtn.addEventListener('click', () => renameServerFile(file));
 
         const delBtn = document.createElement('button');
         delBtn.className = 'icon-btn danger p-1.5';
-        delBtn.title = 'Löschen';
+        labelButton(delBtn, `"${file.name}" löschen`);
         delBtn.innerHTML = iconSvg('trash');
         delBtn.addEventListener('click', () => deleteServerFile(file));
 
@@ -589,7 +661,7 @@ async function loadFiles(path) {
 }
 
 async function downloadServerFile(file) {
-    const result = await window.electronAPI.downloadServerFile(selectedServer, file.path);
+    const result = await withTransferProgress(file.name, () => window.electronAPI.downloadServerFile(selectedServer, file.path));
     if (result.canceled) return;
     showToast(result.success ? `Gespeichert unter ${result.path}` : result.message, result.success ? 'success' : 'error');
 }
@@ -639,7 +711,8 @@ async function handleFiles(files) {
     }
     if (uploads.length === 0) return;
 
-    const result = await window.electronAPI.uploadFilesToServer({ server: selectedServer, files: uploads });
+    const label = uploads.length === 1 ? uploads[0].name : `${uploads.length} Dateien`;
+    const result = await withTransferProgress(label, () => window.electronAPI.uploadFilesToServer({ server: selectedServer, files: uploads }));
     for (const f of uploads) addedFiles.delete(f.name);
 
     if (!result.success) {
@@ -690,17 +763,17 @@ async function loadBackups() {
 
         const dlBtn = document.createElement('button');
         dlBtn.className = 'icon-btn p-1.5';
-        dlBtn.title = 'Herunterladen';
+        labelButton(dlBtn, `Backup "${backup.name}" herunterladen`);
         dlBtn.innerHTML = iconSvg('download');
         dlBtn.addEventListener('click', async () => {
-            const res = await window.electronAPI.downloadBackup(selectedServer, backup.name);
+            const res = await withTransferProgress(backup.name, () => window.electronAPI.downloadBackup(selectedServer, backup.name));
             if (res.canceled) return;
             showToast(res.success ? `Gespeichert unter ${res.path}` : res.message, res.success ? 'success' : 'error');
         });
 
         const delBtn = document.createElement('button');
         delBtn.className = 'icon-btn danger p-1.5';
-        delBtn.title = 'Löschen';
+        labelButton(delBtn, `Backup "${backup.name}" löschen`);
         delBtn.innerHTML = iconSvg('trash');
         delBtn.addEventListener('click', async () => {
             const { confirmed } = await confirmDialog({ title: 'Backup löschen', message: `"${backup.name}" unwiderruflich löschen?` });
