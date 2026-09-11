@@ -1,2 +1,12 @@
 node_modules/
 dist/
+
+# Laufzeitdaten (Serverlisten inkl. Zugangsdaten) - werden ohnehin nicht von
+# hier gelesen, die App nutzt app.getPath('userData'). Nie versionieren.
+data/*
+!data/.keep
+
+# Server-Jars: Drittanbieter-Software (Paper/Spigot/BungeeCord), nicht Teil
+# des Quellcodes und ggf. Lizenz-/Redistributionsfragen. Lokal ablegen, nicht committen.
+jars/*
+!jars/.keep
