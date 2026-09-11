@@ -1,32 +1,47 @@
+<div align="center">
+
+<img src="renderer/images/logo256.png" width="88" alt="Minecraft Server Manager Logo" />
+
 # Minecraft Server Manager
 
-Electron-Desktop-App zur Remote-Verwaltung mehrerer Minecraft-Server per SSH.
+**Electron-Desktop-App zur Remote-Verwaltung mehrerer Minecraft-Server per SSH.**
 
-## ✨ Hauptfunktionen
+[![CI](https://github.com/kallifabio/MinecraftServerControl/actions/workflows/ci.yml/badge.svg)](https://github.com/kallifabio/MinecraftServerControl/actions/workflows/ci.yml)
+![Platform](https://img.shields.io/badge/platform-Windows-4fa39a)
+![Electron](https://img.shields.io/badge/Electron-36-4fa39a?logo=electron&logoColor=white)
+![Node](https://img.shields.io/badge/Node-%3E%3D18-4fa39a?logo=node.js&logoColor=white)
 
-🔧 Masterserver verwalten
-- Mehrere Remote-Hosts (per SSH) anlegen, bearbeiten und löschen.
+</div>
 
-🚀 Remote-Server erstellen, starten, stoppen, löschen
-- Vollautomatisierte Einrichtung von Minecraft-Instanzen über SSH auf einem Masterserver.
-- Online/Offline-Status pro Server direkt in der Liste.
+<br>
 
-📂 Dateizugriff per SFTP
-- Ordner-Navigation mit Breadcrumbs, Datei-Upload per Drag & Drop,
-  Herunterladen, Umbenennen und Löschen einzelner Dateien.
+<img src="docs/preview.svg" alt="Minecraft Server Manager – Oberfläche" width="100%" />
 
-💾 Backups
-- Backup (`.tar.gz`) des Serververzeichnisses per Knopfdruck erstellen,
-  auflisten, herunterladen oder löschen.
+<br>
 
-🖥️ Live-Konsole
-- Log-Streaming per SSH-`tail -f` und Befehle direkt an den laufenden Server senden.
+## Inhalt
 
-## 🛠️ Für wen ist das gedacht?
+- [Funktionen](#-funktionen)
+- [Setup](#-setup)
+- [Server-Software (Jars)](#-server-software-jars)
+- [Zugangsdaten & Verschlüsselung](#-zugangsdaten--verschlüsselung)
+- [SSH-Host-Key-Pinning](#-ssh-host-key-pinning)
+- [Architektur](#️-architektur)
+- [Auto-Update](#-auto-update)
+- [Bekannte Einschränkungen](#️-bekannte-einschränkungen)
 
-- Server-Admins, die mehrere Minecraft-Instanzen hosten
-- Community-Leiter mit eigener Infrastruktur
-- Entwickler, die Server schnell aufsetzen und verwalten wollen
+## ✨ Funktionen
+
+| Bereich | Was es tut |
+|---|---|
+| 🔧 **Masterserver** | Mehrere Remote-Hosts (per SSH) anlegen, bearbeiten, löschen |
+| 🚀 **Minecraft-Server** | Erstellen, starten, stoppen, löschen – mit Online/Offline-Status in der Liste |
+| 📂 **Dateibrowser** | Ordner-Navigation mit Breadcrumbs, Upload per Drag & Drop, Download/Umbenennen/Löschen einzelner Dateien |
+| 💾 **Backups** | `.tar.gz` des Serververzeichnisses erstellen, auflisten, herunterladen, löschen |
+| 🖥️ **Live-Konsole** | Log-Streaming per `tail -f` über SSH, Befehle direkt an den laufenden Server senden |
+| 🔑 **Sicherheit** | Verschlüsselte Zugangsdaten, SSH-Host-Key-Pinning, validierte/escapte Shell-Kommandos |
+
+**Für wen:** Server-Admins mit mehreren Minecraft-Instanzen, Community-Leiter mit eigener Infrastruktur, Entwickler, die Server schnell aufsetzen wollen.
 
 ## 🚀 Setup
 
@@ -58,26 +73,26 @@ Beim ersten Start werden eventuell im lokalen `jars/`-Ordner vorhandene
 `.jar`-Dateien einmalig dorthin übernommen; darüber hinaus lassen sich
 weitere Jars direkt über "Server Software hinzufügen" in der App hochladen.
 
-**Hinweis:** Server-Jars von Drittanbietern (Paper, Spigot, BungeeCord, …)
-unterliegen eigenen Lizenzbedingungen. Sie werden bewusst nicht im
-Git-Repository versioniert (siehe `.gitignore`) – bitte die jeweiligen
-Lizenzen der Projekte prüfen, bevor Jars weitergegeben werden.
+> **Lizenzhinweis:** Server-Jars von Drittanbietern (Paper, Spigot,
+> BungeeCord, …) unterliegen eigenen Lizenzbedingungen. Sie werden bewusst
+> nicht im Git-Repository versioniert (siehe `.gitignore`) – bitte die
+> jeweiligen Lizenzen der Projekte prüfen, bevor Jars weitergegeben werden.
 
-## 🔐 Zugangsdaten
+## 🔐 Zugangsdaten & Verschlüsselung
 
 Server- und Masterserver-Zugangsdaten (SSH-Passwörter) werden lokal unter
 `%APPDATA%/Minecraft Server Manager/data/*.json` gespeichert. Passwörter
-werden dabei über Electrons `safeStorage`-API (unter Windows: DPAPI,
-an den aktuellen Windows-Benutzer gebunden) verschlüsselt abgelegt.
+werden dabei über Electrons `safeStorage`-API (unter Windows: DPAPI, an
+den aktuellen Windows-Benutzer gebunden) verschlüsselt abgelegt.
 
 Ein Minecraft-Server speichert selbst **keine** Zugangsdaten mehr – er
-referenziert nur die `id` seines Masterservers (`masterServerId`) und die
-Zugangsdaten werden bei jeder Aktion frisch vom Masterserver-Eintrag gelesen.
-Ändert sich dort das Passwort, funktionieren bestehende Server-Einträge also
-weiterhin (kein manuelles Nachpflegen nötig).
+referenziert nur die `id` seines Masterservers (`masterServerId`), die
+tatsächlichen Zugangsdaten werden bei jeder Aktion frisch vom Masterserver-
+Eintrag gelesen. Ändert sich dort das Passwort, funktionieren bestehende
+Server-Einträge also weiterhin.
 
-Diese Dateien enthalten sensible Daten und dürfen **niemals** versioniert
-oder geteilt werden.
+> **Diese Dateien enthalten sensible Daten und dürfen niemals versioniert
+> oder geteilt werden.**
 
 ## 🔑 SSH-Host-Key-Pinning
 
@@ -91,28 +106,52 @@ Masterserver zurückgesetzt werden.
 
 ## 🏗️ Architektur
 
-- `main.js` – App-Bootstrap (Fenster, globale Shortcuts, Auto-Update-Check).
-- `preload.js` – Context-Bridge-API für den Renderer.
-- `lib/store-factory.js` – reine Persistenzlogik (ohne Electron-Abhängigkeit,
-  dadurch unit-testbar); `lib/store.js` verdrahtet sie mit den echten
-  Electron-Pfaden/`safeStorage`.
-- `lib/ssh-service.js` – SSH/SFTP-Hilfsfunktionen inkl. Host-Key-Prüfung.
-- `lib/known-hosts.js` – Trust-on-first-use-Host-Key-Speicher.
-- `lib/validate.js` – Eingabevalidierung & sicheres Shell-Quoting.
-- `lib/ipc-handlers.js` – IPC-Handler, die Renderer-Aktionen auf die
-  obigen Module abbilden.
-- `renderer/` – UI (HTML/JS, Tailwind via CDN, strikte CSP).
-- `test/` – `node:test`-Unit-Tests für `lib/validate.js`, `lib/store-factory.js`,
-  `lib/known-hosts.js`.
-- `.github/workflows/ci.yml` – GitHub Actions: Lint + Tests bei jedem Push/PR.
+```mermaid
+flowchart LR
+    subgraph Renderer["renderer/ (UI, sandboxed)"]
+        UI[renderer.js]
+    end
+
+    subgraph Main["Hauptprozess"]
+        Preload[preload.js<br/>contextBridge]
+        IPC[lib/ipc-handlers.js]
+        SSH[lib/ssh-service.js]
+        Known[lib/known-hosts.js<br/>Host-Key-Pinning]
+        Validate[lib/validate.js<br/>Escaping/Validierung]
+        StoreFactory[lib/store-factory.js<br/>reine Persistenzlogik]
+        Store[lib/store.js<br/>Electron-Wrapper]
+    end
+
+    Remote[(Remote-Server<br/>per SSH/SFTP)]
+
+    UI <-->|IPC| Preload <--> IPC
+    IPC --> SSH --> Known
+    IPC --> Validate
+    IPC --> Store --> StoreFactory
+    SSH <-->|SSH/SFTP| Remote
+```
+
+| Datei | Zweck |
+|---|---|
+| `main.js` | App-Bootstrap (Fenster, globale Shortcuts, Auto-Update-Check) |
+| `preload.js` | Context-Bridge-API für den Renderer |
+| `lib/store-factory.js` | reine Persistenzlogik (ohne Electron-Abhängigkeit, unit-testbar) |
+| `lib/store.js` | verdrahtet die Factory mit echten Electron-Pfaden/`safeStorage` |
+| `lib/ssh-service.js` | SSH/SFTP-Hilfsfunktionen inkl. Host-Key-Prüfung |
+| `lib/known-hosts.js` | Trust-on-first-use-Host-Key-Speicher |
+| `lib/validate.js` | Eingabevalidierung & sicheres Shell-Quoting |
+| `lib/ipc-handlers.js` | IPC-Handler, die Renderer-Aktionen auf obige Module abbilden |
+| `renderer/` | UI (HTML/JS, Tailwind via CDN, strikte CSP) |
+| `test/` | `node:test`-Unit-Tests für Validierung, Persistenz, Host-Key-Pinning |
+| `.github/workflows/ci.yml` | GitHub Actions: Lint + Tests bei jedem Push/PR |
 
 ## 🔄 Auto-Update
 
-`electron-updater` ist verdrahtet (Check beim Start, still im Hintergrund,
-nur im gepackten Build aktiv) und `package.json` verweist unter
-`build.publish` auf GitHub Releases dieses Repos. Damit Auto-Update
-tatsächlich greift, muss zusätzlich ein signiertes Release dort veröffentlicht
-werden (`electron-builder --publish always` mit gültigem `GH_TOKEN`) – das ist
+`electron-updater` ist verdrahtet (stiller Check beim Start, nur im
+gepackten Build aktiv) und `package.json` verweist unter `build.publish`
+auf GitHub Releases dieses Repos. Damit Auto-Update tatsächlich greift,
+muss zusätzlich ein signiertes Release dort veröffentlicht werden
+(`electron-builder --publish always` mit gültigem `GH_TOKEN`) – das ist
 bewusst nicht Teil dieses Commits.
 
 ## ⚠️ Bekannte Einschränkungen
@@ -125,3 +164,4 @@ bewusst nicht Teil dieses Commits.
 - Der Online/Offline-Status in der Serverliste wird beim Laden einmalig
   geprüft, nicht laufend aktualisiert (kein automatisches Polling, um nicht
   unnötig viele SSH-Verbindungen zu allen Hosts offen zu halten).
+- Es ist noch keine `LICENSE`-Datei hinterlegt.
