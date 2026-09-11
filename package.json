@@ -3,7 +3,7 @@
   "productName": "Minecraft Server Manager",
   "author": "Coreframe Studio",
   "description": "Minecraft Server Manager für Remote-Serververwaltung mit SSH",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "UNLICENSED",
   "main": "main.js",
   "scripts": {
